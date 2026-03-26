@@ -1,0 +1,126 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'اسم الإصدار (مثل: v1.0.0)'
+        required: false
+        default: 'dev-build'
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─── 1. سحب الكود ─────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─── 2. إعداد Java ────────────────────────────────────────────────────────
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ─── 3. إعداد Flutter ─────────────────────────────────────────────────────
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          cache: true
+
+      # ─── 4. تثبيت الـ packages ────────────────────────────────────────────────
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ─── 5. تحليل الكود (اختياري) ────────────────────────────────────────────
+      - name: Analyze code
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      # ─── 6. فك تشفير Keystore من Secrets ─────────────────────────────────────
+      - name: Decode Keystore
+        if: ${{ env.KEY_STORE != '' }}
+        env:
+          KEY_STORE: ${{ secrets.KEY_STORE }}
+        run: |
+          echo "$KEY_STORE" | base64 --decode > android/app/keystore.jks
+          echo "Keystore decoded successfully"
+
+      # ─── 7. بناء APK debug (دائماً) ──────────────────────────────────────────
+      - name: Build Debug APK
+        run: flutter build apk --debug --target-platform android-arm64
+
+      # ─── 8. بناء APK release (موقّع إن وُجد keystore) ────────────────────────
+      - name: Build Release APK
+        env:
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          flutter build apk --release \
+            --target-platform android-arm64 \
+            --obfuscate \
+            --split-debug-info=build/debug-info
+
+      # ─── 9. تسمية الملفات ──────────────────────────────────────────────────────
+      - name: Rename APKs
+        run: |
+          DATE=$(date +'%Y%m%d-%H%M')
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/cinemana-release-${DATE}.apk
+          cp build/app/outputs/flutter-apk/app-debug.apk \
+             build/app/outputs/flutter-apk/cinemana-debug-${DATE}.apk
+          echo "APK_DATE=${DATE}" >> $GITHUB_ENV
+
+      # ─── 10. رفع APK كـ artifact ──────────────────────────────────────────────
+      - name: Upload Release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinemana-release-${{ env.APK_DATE }}
+          path: build/app/outputs/flutter-apk/cinemana-release-*.apk
+          retention-days: 30
+
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinemana-debug-${{ env.APK_DATE }}
+          path: build/app/outputs/flutter-apk/cinemana-debug-*.apk
+          retention-days: 7
+
+      # ─── 11. إنشاء GitHub Release تلقائياً عند tag ───────────────────────────
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "سينمانا ${{ github.ref_name }}"
+          body: |
+            ## 📱 سينمانا - ${{ github.ref_name }}
+
+            تطبيق سينمانا لمشاهدة الأفلام والمسلسلات العربية.
+
+            ### التثبيت
+            1. حمّل ملف `cinemana-release-*.apk`
+            2. فعّل "مصادر غير معروفة" في الإعدادات
+            3. ثبّت التطبيق
+
+            ### المميزات
+            - 🏠 الصفحة الرئيسية مع مجموعات المحتوى
+            - 🔍 بحث سريع
+            - 📂 أقسام الأفلام والمسلسلات
+            - ⭐ قائمة المفضلة
+            - 🎬 تفاصيل كاملة مع روابط التشغيل
+          files: |
+            build/app/outputs/flutter-apk/cinemana-release-*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

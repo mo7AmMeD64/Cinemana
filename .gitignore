@@ -1,0 +1,45 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Android
+android/local.properties
+android/.gradle/
+android/captures/
+android/app/keystore.jks
+android/key.properties
+*.jks
+*.keystore
+
+# iOS
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Runner/GeneratedPluginRegistrant.*
+
+# OS
+.DS_Store
+*.swp
+Thumbs.db
+
+# Debug info
+build/debug-info/
+
+# Secrets - لا ترفع هذه أبداً!
+*.env
+.env
+secrets/
