@@ -173,10 +173,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 Text(_v.title,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, height: 1.3),
                   textAlign: TextAlign.right),
-                if (_v.titleEn.isNotEmpty)
+                if (_v.titleAr.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(_v.titleEn,
+                    child: Text(_v.titleAr,
                       style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                   ),
               ]),
