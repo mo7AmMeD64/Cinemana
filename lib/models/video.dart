@@ -121,9 +121,9 @@ class CinemanaSubtitle {
   final String label;
   final String url;
 
-  SubtitleTrack({required this.lang, required this.label, required this.url});
+  CinemanaSubtitle({required this.lang, required this.label, required this.url});
 
-  factory CinemanaSubtitle.fromJson(Map<String, dynamic> j) => SubtitleTrack(
+  factory CinemanaSubtitle.fromJson(Map<String, dynamic> j) => CinemanaSubtitle(
         lang: j['srclang'] ?? j['lang'] ?? '',
         label: j['label'] ?? j['title'] ?? j['srclang'] ?? '',
         url: j['src'] ?? j['url'] ?? '',
