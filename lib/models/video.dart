@@ -1,4 +1,4 @@
-class Video {
+class CinemanaVideo {
   final String id;
   final String title;
   final String titleEn;
@@ -13,7 +13,7 @@ class Video {
   final int seasonsCount;
   final List<int> seasons;
 
-  Video({
+  CinemanaVideo({
     required this.id,
     required this.title,
     this.titleEn = '',
@@ -29,7 +29,7 @@ class Video {
     this.seasons = const [],
   });
 
-  factory Video.fromJson(Map<String, dynamic> json) {
+  factory CinemanaVideo.fromJson(Map<String, dynamic> json) {
     double rating = 0.0;
     final r = json['star'] ?? json['rating'] ?? json['rate'] ?? 0;
     if (r is String) rating = double.tryParse(r) ?? 0.0;
@@ -59,7 +59,7 @@ class Video {
     final bool series = typeRaw == '2' || typeRaw == 'series' ||
         json['numberOfSeasons'] != null;
 
-    return Video(
+    return CinemanaVideo(
       id: json['id']?.toString() ?? '',
       title: json['title'] ?? json['name'] ?? '',
       titleEn: json['en_title'] ?? json['title_en'] ?? '',
@@ -91,7 +91,7 @@ class Video {
         'seasonsCount': seasonsCount, 'seasons': seasons,
       };
 
-  factory Video.fromLocalJson(Map<String, dynamic> j) => Video(
+  factory CinemanaVideo.fromLocalJson(Map<String, dynamic> j) => Video(
         id: j['id'] ?? '', title: j['title'] ?? '', titleEn: j['titleEn'] ?? '',
         poster: j['poster'] ?? '', cover: j['cover'] ?? '',
         description: j['description'] ?? '', year: j['year'] ?? '',
@@ -116,14 +116,14 @@ class VideoQuality {
       );
 }
 
-class SubtitleTrack {
+class CinemanaSubtitle {
   final String lang;
   final String label;
   final String url;
 
   SubtitleTrack({required this.lang, required this.label, required this.url});
 
-  factory SubtitleTrack.fromJson(Map<String, dynamic> j) => SubtitleTrack(
+  factory CinemanaSubtitle.fromJson(Map<String, dynamic> j) => SubtitleTrack(
         lang: j['srclang'] ?? j['lang'] ?? '',
         label: j['label'] ?? j['title'] ?? j['srclang'] ?? '',
         url: j['src'] ?? j['url'] ?? '',

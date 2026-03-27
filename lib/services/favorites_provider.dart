@@ -5,14 +5,14 @@ import '../models/video.dart';
 
 class FavoritesProvider extends ChangeNotifier {
   static const _key = 'favorites_v2';
-  List<Video> _favs = [];
-  List<Video> get favorites => _favs;
+  List<CinemanaVideo> _favs = [];
+  List<CinemanaVideo> get favorites => _favs;
 
   FavoritesProvider() { _load(); }
 
   bool isFav(String id) => _favs.any((v) => v.id == id);
 
-  Future<void> toggle(Video v) async {
+  Future<void> toggle(CinemanaVideo v) async {
     if (isFav(v.id)) {
       _favs.removeWhere((x) => x.id == v.id);
     } else {
@@ -30,7 +30,7 @@ class FavoritesProvider extends ChangeNotifier {
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
     final list = p.getStringList(_key) ?? [];
-    _favs = list.map((s) => Video.fromLocalJson(jsonDecode(s))).toList();
+    _favs = list.map((s) => CinemanaVideo.fromLocalJson(jsonDecode(s))).toList();
     notifyListeners();
   }
 }

@@ -120,7 +120,7 @@ class CategoryContentScreen extends StatefulWidget {
 }
 
 class _CategoryContentScreenState extends State<CategoryContentScreen> {
-  final List<Video> _videos = [];
+  final List<CinemanaVideo> _videos = [];
   int _page = 0;
   bool _loading = false, _hasMore = true;
   final _scroll = ScrollController();

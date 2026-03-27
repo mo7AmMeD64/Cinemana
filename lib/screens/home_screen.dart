@@ -12,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _service = CinemanaService();
-  Map<String, List<Video>> _groups = {};
+  Map<String, List<CinemanaVideo>> _groups = {};
   bool _loading = true;
 
   @override
@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ]),
       );
 
-  Widget _group(String title, List<Video> items) {
+  Widget _group(String title, List<CinemanaVideo> items) {
     if (items.isEmpty) return const SizedBox.shrink();
     return Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
       Padding(

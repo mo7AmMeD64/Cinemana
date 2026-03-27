@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
+import 'package:media_kit/media_kit.dart' hide Track;
+import 'package:media_kit_video/media_kit_video.dart' as mk;
 import 'package:http/http.dart' as http;
 import '../models/video.dart';
 import '../utils/app_theme.dart';
@@ -10,7 +10,7 @@ import '../utils/app_theme.dart';
 class PlayerScreen extends StatefulWidget {
   final String url;
   final String title;
-  final List<SubtitleTrack> subtitles;
+  final List<CinemanaSubtitle> subtitles;
   final int startPosition; // بالثواني
 
   const PlayerScreen({
@@ -27,7 +27,7 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   late final Player _player;
-  late final VideoController _controller;
+  late final mk.VideoController _controller;
 
   // حالة المشغّل
   bool _showControls = true;
@@ -40,7 +40,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Timer? _hideTimer;
 
   // ترجمة
-  SubtitleTrack? _selectedSub;
+  CinemanaSubtitle? _selectedSub;
   double _subFontSize = 16.0;
   Color _subColor = Colors.white;
   Color _subBgColor = Colors.black54;
@@ -65,7 +65,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> _initPlayer() async {
     _player = Player();
-    _controller = VideoController(_player);
+    _controller = mk.VideoController(_player);
 
     _player.stream.playing.listen((playing) {
       if (mounted) setState(() => _isPlaying = playing);
@@ -141,7 +141,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         },
         child: Stack(fit: StackFit.expand, children: [
           // مشغّل الفيديو
-          Video(controller: _controller, fill: Colors.black),
+          mk.Video(controller: _controller, fill: Colors.black),
 
           // مؤشر التحميل
           if (_isBuffering)
@@ -600,7 +600,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   // ─── تحميل وتحليل الترجمة (SRT/VTT) ─────────────────────────────────────────
-  Future<void> _loadSubtitle(SubtitleTrack sub) async {
+  Future<void> _loadSubtitle(CinemanaSubtitle sub) async {
     try {
       final res = await http.get(Uri.parse(sub.url));
       if (res.statusCode == 200) {

@@ -8,7 +8,7 @@ import '../utils/app_theme.dart';
 import 'player_screen.dart';
 
 class DetailsScreen extends StatefulWidget {
-  final Video video;
+  final CinemanaVideo video;
   const DetailsScreen({super.key, required this.video});
 
   @override
@@ -17,11 +17,11 @@ class DetailsScreen extends StatefulWidget {
 
 class _DetailsScreenState extends State<DetailsScreen> {
   final _service = CinemanaService();
-  Video? _full;
+  CinemanaVideo? _full;
   bool _loadingDetails = true;
 
   // حلقات المواسم
-  final Map<int, List<Video>> _episodes = {};
+  final Map<int, List<CinemanaVideo>> _episodes = {};
   int _selectedSeason = 1;
   bool _loadingEpisodes = false;
 
@@ -92,7 +92,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     );
   }
 
-  Video get _v => _full ?? widget.video;
+  CinemanaVideo get _v => _full ?? widget.video;
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +340,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
 // ─── Episode Tile ─────────────────────────────────────────────────────────────
 class _EpisodeTile extends StatelessWidget {
-  final Video episode;
+  final CinemanaVideo episode;
   final VoidCallback onPlay;
   const _EpisodeTile({required this.episode, required this.onPlay});
 
@@ -401,7 +401,7 @@ class _EpisodeTile extends StatelessWidget {
 // ─── Quality Picker Bottom Sheet ─────────────────────────────────────────────
 class _QualityPicker extends StatelessWidget {
   final List<VideoQuality> qualities;
-  final List<SubtitleTrack> subtitles;
+  final List<CinemanaSubtitle> subtitles;
   final String title;
   const _QualityPicker({required this.qualities, required this.subtitles, required this.title});
 

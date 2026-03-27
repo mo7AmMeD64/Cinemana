@@ -14,7 +14,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _service = CinemanaService();
   final _ctrl = TextEditingController();
-  List<Video> _results = [];
+  List<CinemanaVideo> _results = [];
   bool _loading = false, _searched = false;
   Timer? _debounce;
 

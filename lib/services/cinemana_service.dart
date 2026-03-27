@@ -24,17 +24,17 @@ class CinemanaService {
   }
 
   // ─── الرئيسية ────────────────────────────────────────────────────────────────
-  Future<Map<String, List<Video>>> getHomeGroups() async {
+  Future<Map<String, List<CinemanaVideo>>> getHomeGroups() async {
     final data = await _get('/api/android/v2/AllVideoByGroups/0/ar/0',
         (d) => d);
     if (data == null) return {};
-    final Map<String, List<Video>> groups = {};
+    final Map<String, List<CinemanaVideo>> groups = {};
     if (data is List) {
       for (final g in data) {
         final title = g['title']?.toString() ?? '';
         final items = (g['data'] as List? ?? []);
         if (title.isNotEmpty && items.isNotEmpty) {
-          groups[title] = items.map((e) => Video.fromJson(e)).toList();
+          groups[title] = items.map((e) => CinemanaVideo.fromJson(e)).toList();
         }
       }
     }
@@ -42,17 +42,17 @@ class CinemanaService {
   }
 
   // ─── بحث ─────────────────────────────────────────────────────────────────────
-  Future<List<Video>> search(String q) async {
+  Future<List<CinemanaVideo>> search(String q) async {
     final data = await _get(
         '/api/android/v2/search/0/ar/$q', (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
+    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   // ─── تفاصيل ──────────────────────────────────────────────────────────────────
-  Future<Video?> getVideoDetails(String id) async {
+  Future<CinemanaVideo?> getVideoDetails(String id) async {
     final data = await _get(
         '/api/android/v2/videoInfo/$id/ar', (d) => d);
-    if (data is Map<String, dynamic>) return Video.fromJson(data);
+    if (data is Map<String, dynamic>) return CinemanaVideo.fromJson(data);
     return null;
   }
 
@@ -64,18 +64,18 @@ class CinemanaService {
   }
 
   // ─── الترجمات ────────────────────────────────────────────────────────────────
-  Future<List<SubtitleTrack>> getSubtitles(String id) async {
+  Future<List<CinemanaSubtitle>> getSubtitles(String id) async {
     final data = await _get(
         '/api/android/v2/videoSubtitle/$id/ar', (d) => d is List ? d : []);
-    return (data ?? []).map<SubtitleTrack>((e) => SubtitleTrack.fromJson(e)).toList();
+    return (data ?? []).map<CinemanaSubtitle>((e) => CinemanaSubtitle.fromJson(e)).toList();
   }
 
   // ─── المواسم والحلقات ────────────────────────────────────────────────────────
-  Future<List<Video>> getSeasonEpisodes(String seriesId, int season) async {
+  Future<List<CinemanaVideo>> getSeasonEpisodes(String seriesId, int season) async {
     final data = await _get(
         '/api/android/v2/videoSeason/$seriesId/$season/ar',
         (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
+    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   // ─── الأقسام ─────────────────────────────────────────────────────────────────
@@ -88,28 +88,28 @@ class CinemanaService {
         .toList();
   }
 
-  Future<List<Video>> getCategoryContent(String catId, int page,
+  Future<List<CinemanaVideo>> getCategoryContent(String catId, int page,
       {bool isSeries = false}) async {
     final t = isSeries ? '2' : '1';
     final data = await _get(
         '/api/android/v2/videoByCategories/$t/$catId/$page/ar',
         (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
+    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   // ─── أحدث + أعلى تقييماً ─────────────────────────────────────────────────────
-  Future<List<Video>> getLatest({int page = 0, bool isSeries = false}) async {
+  Future<List<CinemanaVideo>> getLatest({int page = 0, bool isSeries = false}) async {
     final t = isSeries ? '2' : '1';
     final data = await _get(
         '/api/android/v2/latestVideos/$t/$page/ar', (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
+    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
-  Future<List<Video>> getTopRated({int page = 0, bool isSeries = false}) async {
+  Future<List<CinemanaVideo>> getTopRated({int page = 0, bool isSeries = false}) async {
     final t = isSeries ? '2' : '1';
     final data = await _get(
         '/api/android/v2/topRatedVideos/$t/$page/ar',
         (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
+    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 }

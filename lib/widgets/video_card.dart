@@ -6,7 +6,7 @@ import '../utils/app_theme.dart';
 import '../screens/details_screen.dart';
 
 class VideoCard extends StatelessWidget {
-  final Video video;
+  final CinemanaVideo video;
   final double width;
   final double height;
 
