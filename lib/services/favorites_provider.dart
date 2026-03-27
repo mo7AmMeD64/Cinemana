@@ -4,40 +4,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/video.dart';
 
 class FavoritesProvider extends ChangeNotifier {
-  static const _key = 'favorites';
-  List<Video> _favorites = [];
+  static const _key = 'favorites_v2';
+  List<Video> _favs = [];
+  List<Video> get favorites => _favs;
 
-  List<Video> get favorites => _favorites;
+  FavoritesProvider() { _load(); }
 
-  FavoritesProvider() {
-    _load();
-  }
+  bool isFav(String id) => _favs.any((v) => v.id == id);
 
-  bool isFav(String id) => _favorites.any((v) => v.id == id);
-
-  Future<void> toggle(Video video) async {
-    if (isFav(video.id)) {
-      _favorites.removeWhere((v) => v.id == video.id);
+  Future<void> toggle(Video v) async {
+    if (isFav(v.id)) {
+      _favs.removeWhere((x) => x.id == v.id);
     } else {
-      _favorites.add(video);
+      _favs.insert(0, v);
     }
     notifyListeners();
     await _save();
   }
 
   Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = _favorites.map((v) => jsonEncode(v.toJson())).toList();
-    await prefs.setStringList(_key, data);
+    final p = await SharedPreferences.getInstance();
+    await p.setStringList(_key, _favs.map((v) => jsonEncode(v.toJson())).toList());
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final data = prefs.getStringList(_key) ?? [];
-    _favorites = data.map((s) {
-      final json = jsonDecode(s) as Map<String, dynamic>;
-      return Video.fromLocalJson(json);
-    }).toList();
+    final p = await SharedPreferences.getInstance();
+    final list = p.getStringList(_key) ?? [];
+    _favs = list.map((s) => Video.fromLocalJson(jsonDecode(s))).toList();
     notifyListeners();
   }
 }

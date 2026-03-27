@@ -4,205 +4,112 @@ import '../models/video.dart';
 import '../models/category.dart';
 
 class CinemanaService {
-  static const String _baseUrl = 'https://cinemana.shabakaty.com';
-
-  // Headers تقليد التطبيق الأصلي
+  static const String _base = 'https://cinemana.shabakaty.com';
   static const Map<String, String> _headers = {
     'User-Agent': 'okhttp/4.9.1',
     'Accept': 'application/json',
     'Accept-Language': 'ar',
   };
 
-  // ─── الرئيسية ───────────────────────────────────────────────────────────────
-
-  /// جلب الفيديوهات المقسّمة في الصفحة الرئيسية (مسلسلات، أفلام، حلقات جديدة...)
-  Future<Map<String, List<Video>>> getHomeGroups() async {
+  Future<T?> _get<T>(String path, T Function(dynamic) parser) async {
     try {
-      final url = Uri.parse('$_baseUrl/api/android/v2/AllVideoByGroups/0/ar/0');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return {};
+      final res = await http
+          .get(Uri.parse('$_base$path'), headers: _headers)
+          .timeout(const Duration(seconds: 15));
+      if (res.statusCode != 200) return null;
+      return parser(jsonDecode(res.body));
+    } catch (_) {
+      return null;
+    }
+  }
 
-      final data = jsonDecode(response.body);
-      final Map<String, List<Video>> groups = {};
-
-      if (data is List) {
-        for (final group in data) {
-          final title = group['title']?.toString() ?? 'بدون عنوان';
-          final items = group['data'] as List? ?? [];
+  // ─── الرئيسية ────────────────────────────────────────────────────────────────
+  Future<Map<String, List<Video>>> getHomeGroups() async {
+    final data = await _get('/api/android/v2/AllVideoByGroups/0/ar/0',
+        (d) => d);
+    if (data == null) return {};
+    final Map<String, List<Video>> groups = {};
+    if (data is List) {
+      for (final g in data) {
+        final title = g['title']?.toString() ?? '';
+        final items = (g['data'] as List? ?? []);
+        if (title.isNotEmpty && items.isNotEmpty) {
           groups[title] = items.map((e) => Video.fromJson(e)).toList();
         }
-      } else if (data is Map) {
-        // بعض الـ endpoints ترجع map
-        data.forEach((key, value) {
-          if (value is List) {
-            groups[key] = value.map((e) => Video.fromJson(e)).toList();
-          }
-        });
       }
-
-      return groups;
-    } catch (e) {
-      return {};
     }
+    return groups;
   }
 
-  // ─── بحث ────────────────────────────────────────────────────────────────────
-
-  /// البحث عن فيلم أو مسلسل بالاسم
-  Future<List<Video>> search(String query) async {
-    try {
-      final url = Uri.parse(
-          '$_baseUrl/api/android/v2/search/0/ar/$query');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => Video.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+  // ─── بحث ─────────────────────────────────────────────────────────────────────
+  Future<List<Video>> search(String q) async {
+    final data = await _get(
+        '/api/android/v2/search/0/ar/$q', (d) => d is List ? d : []);
+    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
   }
 
-  // ─── تفاصيل ─────────────────────────────────────────────────────────────────
-
-  /// تفاصيل فيديو بالـ ID
+  // ─── تفاصيل ──────────────────────────────────────────────────────────────────
   Future<Video?> getVideoDetails(String id) async {
-    try {
-      final url = Uri.parse('$_baseUrl/api/android/v2/videoInfo/$id/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return null;
+    final data = await _get(
+        '/api/android/v2/videoInfo/$id/ar', (d) => d);
+    if (data is Map<String, dynamic>) return Video.fromJson(data);
+    return null;
+  }
 
-      final data = jsonDecode(response.body);
-      if (data is Map<String, dynamic>) {
-        return Video.fromJson(data);
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
+  // ─── جودات الفيديو ───────────────────────────────────────────────────────────
+  Future<List<VideoQuality>> getQualities(String id) async {
+    final data = await _get(
+        '/api/android/v2/videoTranscode/$id/ar', (d) => d is List ? d : []);
+    return (data ?? []).map<VideoQuality>((e) => VideoQuality.fromJson(e)).toList();
+  }
+
+  // ─── الترجمات ────────────────────────────────────────────────────────────────
+  Future<List<SubtitleTrack>> getSubtitles(String id) async {
+    final data = await _get(
+        '/api/android/v2/videoSubtitle/$id/ar', (d) => d is List ? d : []);
+    return (data ?? []).map<SubtitleTrack>((e) => SubtitleTrack.fromJson(e)).toList();
   }
 
   // ─── المواسم والحلقات ────────────────────────────────────────────────────────
-
-  /// جلب حلقات موسم معين
   Future<List<Video>> getSeasonEpisodes(String seriesId, int season) async {
-    try {
-      final url = Uri.parse(
-          '$_baseUrl/api/android/v2/videoSeason/$seriesId/$season/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => Video.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // ─── روابط التشغيل ───────────────────────────────────────────────────────────
-
-  /// جلب روابط الفيديو (transcodes) بالجودات المختلفة
-  Future<List<VideoQuality>> getVideoQualities(String id) async {
-    try {
-      final url =
-          Uri.parse('$_baseUrl/api/android/v2/videoTranscode/$id/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => VideoQuality.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+    final data = await _get(
+        '/api/android/v2/videoSeason/$seriesId/$season/ar',
+        (d) => d is List ? d : []);
+    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
   }
 
   // ─── الأقسام ─────────────────────────────────────────────────────────────────
-
-  /// جلب قائمة الأقسام (Categories)
   Future<List<CinemanaCategory>> getCategories({bool isSeries = false}) async {
-    try {
-      final type = isSeries ? '2' : '1'; // 1=أفلام، 2=مسلسلات
-      final url = Uri.parse(
-          '$_baseUrl/api/android/v2/Categories/$type/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => CinemanaCategory.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+    final t = isSeries ? '2' : '1';
+    final data = await _get(
+        '/api/android/v2/Categories/$t/ar', (d) => d is List ? d : []);
+    return (data ?? [])
+        .map<CinemanaCategory>((e) => CinemanaCategory.fromJson(e))
+        .toList();
   }
 
-  /// محتوى قسم معين
-  Future<List<Video>> getCategoryContent(
-      String categoryId, int page, {bool isSeries = false}) async {
-    try {
-      final type = isSeries ? '2' : '1';
-      final url = Uri.parse(
-          '$_baseUrl/api/android/v2/videoByCategories/$type/$categoryId/$page/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => Video.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+  Future<List<Video>> getCategoryContent(String catId, int page,
+      {bool isSeries = false}) async {
+    final t = isSeries ? '2' : '1';
+    final data = await _get(
+        '/api/android/v2/videoByCategories/$t/$catId/$page/ar',
+        (d) => d is List ? d : []);
+    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
   }
 
-  // ─── الصفحات الإضافية ────────────────────────────────────────────────────────
-
-  /// أحدث الإضافات
+  // ─── أحدث + أعلى تقييماً ─────────────────────────────────────────────────────
   Future<List<Video>> getLatest({int page = 0, bool isSeries = false}) async {
-    try {
-      final type = isSeries ? '2' : '1';
-      final url = Uri.parse(
-          '$_baseUrl/api/android/v2/latestVideos/$type/$page/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => Video.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+    final t = isSeries ? '2' : '1';
+    final data = await _get(
+        '/api/android/v2/latestVideos/$t/$page/ar', (d) => d is List ? d : []);
+    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
   }
 
-  /// الأعلى تقييمًا
   Future<List<Video>> getTopRated({int page = 0, bool isSeries = false}) async {
-    try {
-      final type = isSeries ? '2' : '1';
-      final url = Uri.parse(
-          '$_baseUrl/api/android/v2/topRatedVideos/$type/$page/ar');
-      final response = await http.get(url, headers: _headers);
-      if (response.statusCode != 200) return [];
-
-      final data = jsonDecode(response.body);
-      if (data is List) {
-        return data.map((e) => Video.fromJson(e)).toList();
-      }
-      return [];
-    } catch (e) {
-      return [];
-    }
+    final t = isSeries ? '2' : '1';
+    final data = await _get(
+        '/api/android/v2/topRatedVideos/$t/$page/ar',
+        (d) => d is List ? d : []);
+    return (data ?? []).map<Video>((e) => Video.fromJson(e)).toList();
   }
 }
