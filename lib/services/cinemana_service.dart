@@ -45,7 +45,7 @@ class CinemanaService {
   Future<List<CinemanaVideo>> search(String q) async {
     final data = await _get(
         '/api/android/v2/search/0/ar/$q', (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
+    return (data ?? []).map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   // ─── تفاصيل ──────────────────────────────────────────────────────────────────
@@ -75,7 +75,7 @@ class CinemanaService {
     final data = await _get(
         '/api/android/v2/videoSeason/$seriesId/$season/ar',
         (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
+    return (data ?? []).map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   // ─── الأقسام ─────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ class CinemanaService {
     final data = await _get(
         '/api/android/v2/videoByCategories/$t/$catId/$page/ar',
         (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
+    return (data ?? []).map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   // ─── أحدث + أعلى تقييماً ─────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ class CinemanaService {
     final t = isSeries ? '2' : '1';
     final data = await _get(
         '/api/android/v2/latestVideos/$t/$page/ar', (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
+    return (data ?? []).map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 
   Future<List<CinemanaVideo>> getTopRated({int page = 0, bool isSeries = false}) async {
@@ -110,6 +110,6 @@ class CinemanaService {
     final data = await _get(
         '/api/android/v2/topRatedVideos/$t/$page/ar',
         (d) => d is List ? d : []);
-    return (data ?? []).map<Video>((e) => CinemanaVideo.fromJson(e)).toList();
+    return (data ?? []).map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
   }
 }

@@ -91,7 +91,7 @@ class CinemanaVideo {
         'seasonsCount': seasonsCount, 'seasons': seasons,
       };
 
-  factory CinemanaVideo.fromLocalJson(Map<String, dynamic> j) => Video(
+  factory CinemanaVideo.fromLocalJson(Map<String, dynamic> j) => CinemanaVideo(
         id: j['id'] ?? '', title: j['title'] ?? '', titleEn: j['titleEn'] ?? '',
         poster: j['poster'] ?? '', cover: j['cover'] ?? '',
         description: j['description'] ?? '', year: j['year'] ?? '',
