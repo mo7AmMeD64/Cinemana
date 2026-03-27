@@ -1,7 +1,7 @@
 class CinemanaVideo {
   final String id;
   final String title;
-  final String titleEn;
+  final String titleAr;
   final String poster;
   final String cover;
   final String description;
@@ -16,7 +16,7 @@ class CinemanaVideo {
   CinemanaVideo({
     required this.id,
     required this.title,
-    this.titleEn = '',
+    this.titleAr = '',
     required this.poster,
     this.cover = '',
     this.description = '',
@@ -29,14 +29,50 @@ class CinemanaVideo {
     this.seasons = const [],
   });
 
-  factory CinemanaVideo.fromJson(Map<String, dynamic> json) {
+  factory CinemanaVideo.fromJson(Map<String, dynamic> j) {
+    // ID: nb أو id
+    final id = j['nb']?.toString() ?? j['id']?.toString() ?? '';
+
+    // العنوان: en_title أو enTitle
+    final title = j['en_title']?.toString() ??
+        j['enTitle']?.toString() ??
+        j['title']?.toString() ??
+        '';
+    final titleAr = j['ar_title']?.toString() ??
+        j['arTitle']?.toString() ??
+        j['title']?.toString() ??
+        '';
+
+    // الصورة: imgObjUrl أو img
+    final poster = _img(j['imgObjUrl']?.toString() ??
+        j['img']?.toString() ??
+        j['poster']?.toString() ??
+        '');
+
+    final cover = _img(j['cover']?.toString() ??
+        j['imgBackgroundUrl']?.toString() ??
+        '');
+
+    // الوصف
+    final desc = j['en_content']?.toString() ??
+        j['enContent']?.toString() ??
+        j['description']?.toString() ??
+        '';
+
+    // التقييم: stars
     double rating = 0.0;
-    final r = json['star'] ?? json['rating'] ?? json['rate'] ?? 0;
+    final r = j['stars'] ?? j['rating'] ?? j['star'] ?? 0;
     if (r is String) rating = double.tryParse(r) ?? 0.0;
     else if (r is num) rating = r.toDouble();
 
+    // نوع المحتوى: kind == 2 → مسلسل
+    final kindRaw = j['kind'] ?? j['type'] ?? '';
+    final bool series = kindRaw == 2 || kindRaw == '2' ||
+        kindRaw == 'series' || (j['numberOfSeasons'] != null);
+
+    // الأقسام
     List<String> cats = [];
-    final catRaw = json['categories'] ?? json['category'] ?? [];
+    final catRaw = j['categories'] ?? j['category'] ?? [];
     if (catRaw is List) {
       cats = catRaw.map((c) {
         if (c is Map) return c['title']?.toString() ?? '';
@@ -44,10 +80,11 @@ class CinemanaVideo {
       }).where((s) => s.isNotEmpty).toList();
     }
 
+    // المواسم
     List<int> seasonsList = [];
-    final rawSeasons = json['seasons'];
-    if (rawSeasons is List) {
-      seasonsList = rawSeasons.map<int>((s) {
+    final rawS = j['seasons'];
+    if (rawS is List) {
+      seasonsList = rawS.map<int>((s) {
         if (s is int) return s;
         if (s is String) return int.tryParse(s) ?? 0;
         if (s is Map) return int.tryParse(s['id']?.toString() ?? '0') ?? 0;
@@ -55,24 +92,20 @@ class CinemanaVideo {
       }).toList();
     }
 
-    final typeRaw = json['type'] ?? json['content_type'] ?? '';
-    final bool series = typeRaw == '2' || typeRaw == 'series' ||
-        json['numberOfSeasons'] != null;
-
     return CinemanaVideo(
-      id: json['id']?.toString() ?? '',
-      title: json['title'] ?? json['name'] ?? '',
-      titleEn: json['en_title'] ?? json['title_en'] ?? '',
-      poster: _img(json['poster'] ?? json['image'] ?? ''),
-      cover: _img(json['cover'] ?? json['background'] ?? ''),
-      description: json['description'] ?? json['story'] ?? '',
-      year: json['year']?.toString() ?? '',
-      duration: json['duration']?.toString() ?? '',
+      id: id,
+      title: title.isNotEmpty ? title : titleAr,
+      titleAr: titleAr,
+      poster: poster,
+      cover: cover,
+      description: desc,
+      year: j['year']?.toString() ?? '',
+      duration: j['duration']?.toString() ?? '',
       rating: rating,
       categories: cats,
       isSeries: series,
       seasonsCount:
-          int.tryParse(json['numberOfSeasons']?.toString() ?? '0') ?? 0,
+          int.tryParse(j['numberOfSeasons']?.toString() ?? '0') ?? 0,
       seasons: seasonsList,
     );
   }
@@ -84,7 +117,7 @@ class CinemanaVideo {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id, 'title': title, 'titleEn': titleEn,
+        'id': id, 'title': title, 'titleAr': titleAr,
         'poster': poster, 'cover': cover, 'description': description,
         'year': year, 'duration': duration, 'rating': rating,
         'categories': categories, 'isSeries': isSeries,
@@ -92,9 +125,13 @@ class CinemanaVideo {
       };
 
   factory CinemanaVideo.fromLocalJson(Map<String, dynamic> j) => CinemanaVideo(
-        id: j['id'] ?? '', title: j['title'] ?? '', titleEn: j['titleEn'] ?? '',
-        poster: j['poster'] ?? '', cover: j['cover'] ?? '',
-        description: j['description'] ?? '', year: j['year'] ?? '',
+        id: j['id'] ?? '',
+        title: j['title'] ?? '',
+        titleAr: j['titleAr'] ?? '',
+        poster: j['poster'] ?? '',
+        cover: j['cover'] ?? '',
+        description: j['description'] ?? '',
+        year: j['year'] ?? '',
         duration: j['duration'] ?? '',
         rating: (j['rating'] as num?)?.toDouble() ?? 0.0,
         categories: List<String>.from(j['categories'] ?? []),
@@ -111,8 +148,15 @@ class VideoQuality {
   VideoQuality({required this.quality, required this.url});
 
   factory VideoQuality.fromJson(Map<String, dynamic> j) => VideoQuality(
-        quality: j['quality'] ?? j['resolution'] ?? j['name'] ?? '',
-        url: j['url'] ?? j['link'] ?? j['src'] ?? '',
+        // transcoddedFiles يرجع: videoUrl + resolution
+        quality: j['resolution']?.toString() ??
+            j['quality']?.toString() ??
+            j['name']?.toString() ??
+            '',
+        url: j['videoUrl']?.toString() ??
+            j['url']?.toString() ??
+            j['link']?.toString() ??
+            '',
       );
 }
 
@@ -124,8 +168,15 @@ class CinemanaSubtitle {
   CinemanaSubtitle({required this.lang, required this.label, required this.url});
 
   factory CinemanaSubtitle.fromJson(Map<String, dynamic> j) => CinemanaSubtitle(
-        lang: j['srclang'] ?? j['lang'] ?? '',
-        label: j['label'] ?? j['title'] ?? j['srclang'] ?? '',
-        url: j['src'] ?? j['url'] ?? '',
+        lang: j['lang']?.toString() ?? j['srclang']?.toString() ?? '',
+        // translations في API: name + file
+        label: j['name']?.toString() ??
+            j['label']?.toString() ??
+            j['title']?.toString() ??
+            '',
+        url: j['file']?.toString() ??
+            j['src']?.toString() ??
+            j['url']?.toString() ??
+            '',
       );
 }
