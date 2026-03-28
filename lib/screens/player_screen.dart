@@ -50,6 +50,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   // إعدادات الترجمة
   bool _showSubSettings = false;
+  double _subVerticalPos = 24.0; // ارتفاع الترجمة من الأسفل
 
   final List<double> _speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
@@ -142,7 +143,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
         },
         child: Stack(fit: StackFit.expand, children: [
           // مشغّل الفيديو
-          mk.Video(controller: _controller, fill: Colors.black),
+          mk.Video(
+            controller: _controller,
+            fill: Colors.black,
+            controls: mk.NoVideoControls, // نستخدم controls خاصتنا فقط
+          ),
 
           // مؤشر التحميل
           if (_isBuffering)
@@ -170,7 +175,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   // ─── الترجمة على الشاشة ───────────────────────────────────────────────────────
   Widget _buildSubtitleOverlay() {
     return Positioned(
-      bottom: _showControls ? 90 : 24,
+      bottom: _showControls ? _subVerticalPos + 66 : _subVerticalPos,
       left: 16, right: 16,
       child: Center(
         child: Container(
@@ -512,6 +517,44 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             : null,
                       ),
                     ),
+                ]),
+              ),
+
+              // رفع/خفض الترجمة
+              _settingRow(
+                'موضع الترجمة',
+                Row(children: [
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 20),
+                    onPressed: () => setState(() => _subVerticalPos = (_subVerticalPos - 10).clamp(8, 200)),
+                    padding: EdgeInsets.zero, constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    width: 60,
+                    child: SliderTheme(
+                      data: SliderThemeData(
+                        trackHeight: 2,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+                        activeTrackColor: AppTheme.accent,
+                        inactiveTrackColor: Colors.white24,
+                        thumbColor: AppTheme.accent,
+                        overlayColor: AppTheme.accent.withOpacity(0.2),
+                      ),
+                      child: Slider(
+                        value: _subVerticalPos.clamp(8, 200),
+                        min: 8, max: 200,
+                        onChanged: (v) => setState(() => _subVerticalPos = v),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white, size: 20),
+                    onPressed: () => setState(() => _subVerticalPos = (_subVerticalPos + 10).clamp(8, 200)),
+                    padding: EdgeInsets.zero, constraints: const BoxConstraints(),
+                  ),
                 ]),
               ),
 

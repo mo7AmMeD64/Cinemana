@@ -151,4 +151,16 @@ class CinemanaService {
     if (d is! List) return [];
     return d.map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
   }
+
+  // ─── قائمة مرتبة (للأقسام) ──────────────────────────────────────────────────
+  Future<List<CinemanaVideo>> getSortedVideos({
+    required String kind,
+    required String sort,
+    int page = 1,
+  }) async {
+    final d = await _get(
+        '/api/android/video/V/2/itemsPerPage/24/level/0/videoKind/$kind/sortParam/$sort/pageNumber/$page');
+    if (d is! List) return [];
+    return d.map<CinemanaVideo>((e) => CinemanaVideo.fromJson(e)).toList();
+  }
 }
