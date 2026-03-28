@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart' hide Track;
@@ -604,7 +605,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     try {
       final res = await http.get(Uri.parse(sub.url));
       if (res.statusCode == 200) {
-        final entries = _parseSrt(res.body);
+        // استخدام utf8.decode لدعم العربية
+        final text = utf8.decode(res.bodyBytes, allowMalformed: true);
+        final entries = _parseSrt(text);
         // مزامنة مع الموقع الحالي
         _player.stream.position.listen((pos) {
           if (!mounted || _selectedSub?.lang != sub.lang) return;
